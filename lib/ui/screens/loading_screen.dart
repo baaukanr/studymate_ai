@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../data/plan_service.dart';
+import '../../data/study_store.dart';
 import '../routes.dart';
 import '../theme.dart';
 
@@ -14,8 +16,9 @@ class LoadingScreen extends StatefulWidget {
 
 class _LoadingScreenState extends State<LoadingScreen>
     with SingleTickerProviderStateMixin {
-  Timer? _timer;
   late final AnimationController _pulse;
+  String? _error;
+  bool _started = false;
 
   @override
   void initState() {
@@ -26,16 +29,44 @@ class _LoadingScreenState extends State<LoadingScreen>
       lowerBound: 0.90,
       upperBound: 1.05,
     )..repeat(reverse: true);
+  }
 
-    _timer = Timer(const Duration(milliseconds: 2500), () {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(StudyMateRoutes.plan);
-    });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final request = args is PlanRequest ? args : PlanService.pendingRequest;
+    if (request == null) {
+      setState(() => _error = 'Не переданы данные для генерации плана');
+      return;
+    }
+    _generate(request);
+  }
+
+  Future<void> _generate(PlanRequest request) async {
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    PlanService.pendingRequest = null;
+    final err = await PlanService.generatePlan(request);
+    if (!mounted) return;
+    if (err != null) {
+      setState(() => _error = err);
+      return;
+    }
+    final examId = PlanService.pendingExamId;
+    final plan = PlanService.currentPlan;
+    if (examId != null && plan != null) {
+      StudyStore.instance.saveGeneratedPlan(examId: examId, plan: plan);
+      PlanService.pendingExamId = null;
+    }
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed(StudyMateRoutes.plan);
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
     _pulse.dispose();
     super.dispose();
   }
@@ -63,24 +94,32 @@ class _LoadingScreenState extends State<LoadingScreen>
               ),
               const SizedBox(height: 22),
               const Text(
-                'ИИ формирует твой план…',
+                'Отправляем запрос к ИИ…',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Анализируем темы и создаем оптимальный график',
+                'Сервер формирует персональный план по вашим темам',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.neutral500, fontSize: 16, height: 1.35),
               ),
               const SizedBox(height: 22),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: const LinearProgressIndicator(
-                  minHeight: 12,
-                  backgroundColor: AppColors.neutral200,
-                  valueColor: AlwaysStoppedAnimation(AppColors.neutral900),
+              if (_error == null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: const LinearProgressIndicator(
+                    minHeight: 12,
+                    backgroundColor: AppColors.neutral200,
+                    valueColor: AlwaysStoppedAnimation(AppColors.neutral900),
+                  ),
                 ),
-              ),
+              if (_error != null) ...[
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.red600, fontWeight: FontWeight.w600),
+                ),
+              ],
             ],
           ),
         ),
@@ -88,4 +127,3 @@ class _LoadingScreenState extends State<LoadingScreen>
     );
   }
 }
-

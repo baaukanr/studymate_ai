@@ -48,3 +48,5 @@ app.*.map.json
 # Node proxy related
 server/node_modules/
 server/.env
+# Runtime DB files (users, sessions, study snapshots) — не коммитить
+server/data/

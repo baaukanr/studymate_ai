@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../data/auth_service.dart';
+import '../../data/study_remote.dart';
+import '../../data/study_store.dart';
 import '../routes.dart';
 import '../theme.dart';
 
@@ -18,9 +21,17 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(seconds: 2), () {
+    _timer = Timer(const Duration(seconds: 2), () async {
+      final ok = await AuthService.isAuthorized();
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(StudyMateRoutes.login);
+      if (ok) {
+        final snap = await fetchStudySnapshot();
+        if (snap != null) await StudyStore.instance.applyServerPayload(snap);
+        if (!mounted) return;
+      }
+      Navigator.of(context).pushReplacementNamed(
+        ok ? StudyMateRoutes.tabs : StudyMateRoutes.login,
+      );
     });
   }
 
@@ -65,4 +76,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-

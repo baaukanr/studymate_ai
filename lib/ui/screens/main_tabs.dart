@@ -31,6 +31,8 @@ class _MainTabsState extends State<MainTabs> {
         currentIndex: _index,
         onTap: (i) => setState(() => _index = i),
         type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.white,
+        elevation: 12,
         selectedItemColor: AppColors.neutral900,
         unselectedItemColor: AppColors.neutral500,
         showUnselectedLabels: true,

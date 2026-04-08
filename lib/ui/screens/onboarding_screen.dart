@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../data/auth_service.dart';
+import '../../data/study_remote.dart';
+import '../../data/study_store.dart';
 import '../routes.dart';
 import '../theme.dart';
 import '../widgets/primary_button.dart';
@@ -39,15 +42,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _next() {
+  Future<void> _syncStudyIfAuthorized() async {
+    if (!await AuthService.isAuthorized()) return;
+    final snap = await fetchStudySnapshot();
+    if (snap != null) await StudyStore.instance.applyServerPayload(snap);
+  }
+
+  Future<void> _next() async {
     if (_page < _slides.length - 1) {
       _controller.nextPage(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
     } else {
+      await _syncStudyIfAuthorized();
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(StudyMateRoutes.tabs);
     }
+  }
+
+  Future<void> _skipToTabs() async {
+    await _syncStudyIfAuthorized();
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed(StudyMateRoutes.tabs);
   }
 
   @override
@@ -63,8 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () => Navigator.of(context)
-                      .pushReplacementNamed(StudyMateRoutes.tabs),
+                  onPressed: _skipToTabs,
                   child: const Text(
                     'Пропустить',
                     style: TextStyle(color: AppColors.neutral900),

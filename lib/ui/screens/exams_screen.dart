@@ -1,106 +1,117 @@
 import 'package:flutter/material.dart';
 
+import '../../data/study_models.dart';
+import '../../data/study_store.dart';
+import '../routes.dart';
 import '../theme.dart';
+import '../widgets/primary_button.dart';
 
 class ExamsScreen extends StatelessWidget {
   const ExamsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final store = StudyStore.instance;
+    final list = List<ExamEntry>.from(store.exams)
+      ..sort((a, b) {
+        final da = StudyStore.parseUserDate(a.examDate);
+        final db = StudyStore.parseUserDate(b.examDate);
+        if (da == null) return 1;
+        if (db == null) return -1;
+        return da.compareTo(db);
+      });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Мои экзамены')),
+      appBar: AppBar(
+        foregroundColor: AppColors.neutral900,
+        title: const Text('Экзамены'),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(24),
-          children: const [
-            Text(
-              'Отслеживай прогресс подготовки',
-              style: TextStyle(color: AppColors.neutral500, fontSize: 16),
+          children: [
+            const Text(
+              'Экзамен — календарная дата и предмет. План (шаги день 1, 2…) создаётся отдельно и привязывается к экзамену.',
+              style: TextStyle(color: AppColors.neutral500, fontSize: 14, height: 1.35),
             ),
-            SizedBox(height: 16),
-            _ExamCard(
-              subject: 'Математический анализ',
-              daysLeft: 5,
-              progress: 0.65,
+            const SizedBox(height: 16),
+            PrimaryButton(
+              label: 'Добавить экзамен и план',
+              icon: Icons.add,
+              onPressed: () => Navigator.of(context).pushNamed(StudyMateRoutes.createExam),
             ),
-            SizedBox(height: 12),
-            _ExamCard(
-              subject: 'Физика',
-              daysLeft: 12,
-              progress: 0.40,
-            ),
-            SizedBox(height: 12),
-            _ExamCard(
-              subject: 'История',
-              daysLeft: 2,
-              progress: 0.85,
-            ),
+            const SizedBox(height: 20),
+            if (list.isEmpty)
+              const Text(
+                'Пока нет экзаменов.',
+                style: TextStyle(color: AppColors.neutral500),
+              )
+            else
+              ...list.map((e) {
+                final d = StudyStore.calendarDaysUntilExam(e.examDate);
+                final plan = store.latestPlanForExam(e.id);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.neutral200),
+                      boxShadow: AppShadows.card,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          e.subject,
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Дата экзамена: ${e.examDate}',
+                          style: const TextStyle(color: AppColors.neutral500),
+                        ),
+                        if (d != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            d >= 0
+                                ? 'До экзамена: $d календ. дн.'
+                                : 'Экзамен прошёл',
+                            style: const TextStyle(color: AppColors.neutral500, fontSize: 14),
+                          ),
+                        ],
+                        if (plan != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            'План: ${plan.daysJson.length} шагов, ${StudyStore.formatPlanDurationRu(plan.totalPlanMinutes)}',
+                            style: const TextStyle(color: AppColors.neutral500, fontSize: 13),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              StudyStore.instance.applyPlanToMemory(plan);
+                              Navigator.of(context).pushNamed(StudyMateRoutes.plan);
+                            },
+                            child: const Text('Открыть план'),
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 10),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pushNamed(
+                              StudyMateRoutes.createPlan,
+                              arguments: e,
+                            ),
+                            child: const Text('Создать план подготовки'),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }),
           ],
         ),
       ),
     );
   }
 }
-
-class _ExamCard extends StatelessWidget {
-  final String subject;
-  final int daysLeft;
-  final double progress;
-
-  const _ExamCard({
-    Key? key,
-    required this.subject,
-    required this.daysLeft,
-    required this.progress,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final done = progress >= 0.8;
-    final barColor = done ? AppColors.green600 : AppColors.neutral900;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.neutral200),
-        boxShadow: AppShadows.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  subject,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-              if (done) const Icon(Icons.check_circle, color: AppColors.green600),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'До экзамена: $daysLeft дней',
-            style: const TextStyle(color: AppColors.neutral500),
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              minHeight: 10,
-              value: progress,
-              backgroundColor: AppColors.neutral200,
-              valueColor: AlwaysStoppedAnimation(barColor),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text('${(progress * 100).round()}%', style: const TextStyle(color: AppColors.neutral500)),
-        ],
-      ),
-    );
-  }
-}
-

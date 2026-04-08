@@ -12,21 +12,33 @@ class StudyMateApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final base = ThemeData(
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColors.neutral50,
+      scaffoldBackgroundColor: AppColors.surface,
       visualDensity: VisualDensity.adaptivePlatformDensity,
+      dividerColor: AppColors.borderSubtle,
     );
 
-    final theme = base.copyWith(
-      textTheme: GoogleFonts.interTextTheme(base.textTheme),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.neutral50,
-        elevation: 0,
-        iconTheme: IconThemeData(color: AppColors.neutral900),
-        titleTextStyle: TextStyle(
-          color: AppColors.neutral900,
-          fontWeight: FontWeight.w700,
+    final interText = GoogleFonts.interTextTheme(base.textTheme);
+    final appBarTitle = interText.headline6?.copyWith(
+          color: Colors.black,
+          fontWeight: FontWeight.w800,
           fontSize: 18,
-        ),
+        ) ??
+        const TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.w800,
+          fontSize: 18,
+        );
+
+    final theme = base.copyWith(
+      textTheme: interText,
+      // Flutter 2.x: color + brightness + textTheme.headline6 для заголовка AppBar
+      appBarTheme: AppBarTheme(
+        color: AppColors.surface,
+        brightness: Brightness.light,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        textTheme: interText.copyWith(headline6: appBarTitle),
+        titleTextStyle: appBarTitle,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -41,21 +53,30 @@ class StudyMateApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.neutral50,
+        fillColor: AppColors.white,
         hintStyle: const TextStyle(color: AppColors.neutral500),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.neutral200),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.neutral200),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.neutral900, width: 1),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.neutral900, width: 1.2),
         ),
+      ),
+      cardTheme: CardTheme(
+        color: AppColors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.borderSubtle),
+        ),
+        margin: EdgeInsets.zero,
       ),
     );
 
