@@ -169,7 +169,12 @@ class _PlanScreenState extends State<PlanScreen> {
                         border: Border.all(color: const Color(0xFFFDBA74)),
                       ),
                       child: const Text(
-                        'Сервер не ответил. Запустите proxy, проверьте OPENROUTER_API_KEY. Показан локальный план.',
+                        'ИИ-план не сгенерирован: приложение не достучалось до сервера '
+                        '(или запрос оборвался). Показан запасной план по вашим темам.\n\n'
+                        'Что сделать:\n'
+                        '• Запустите backend: папка server → npm install → npm start (порт 8787).\n'
+                        '• Задайте ключ OpenRouter: set OPENROUTER_API_KEY=sk-or-v1-... (Windows) перед npm start.\n'
+                        '• С телефона/эмулятора localhost не виден — укажите IP вашего ПК в настройках или --dart-define.',
                         style: TextStyle(
                           color: Color(0xFF9A3412),
                           fontSize: 13,

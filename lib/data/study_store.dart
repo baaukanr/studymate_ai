@@ -307,6 +307,7 @@ class StudyStore extends ChangeNotifier {
 
   void applyPlanToMemory(SavedPlanEntry entry) {
     final days = entry.daysJson.map((m) => PlanDay.fromJson(m)).toList();
+    PlanService.lastPlanWasLocalFallback = false;
     PlanService.currentPlanId = entry.id;
     PlanService.currentPlan = StudyPlan(
       subject: entry.subject,
