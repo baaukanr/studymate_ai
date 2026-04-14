@@ -40,7 +40,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
@@ -240,8 +240,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     child: ElevatedButton(
                       onPressed: _sending ? null : () => _send(_controller.text),
                       style: ElevatedButton.styleFrom(
-                        primary: AppColors.neutral900,
-                        onPrimary: Colors.white,
+                        backgroundColor: AppColors.neutral900,
+                        foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),

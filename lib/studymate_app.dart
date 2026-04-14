@@ -18,7 +18,7 @@ class StudyMateApp extends StatelessWidget {
     );
 
     final interText = GoogleFonts.interTextTheme(base.textTheme);
-    final appBarTitle = interText.headline6?.copyWith(
+    final appBarTitle = interText.titleLarge?.copyWith(
           color: Colors.black,
           fontWeight: FontWeight.w800,
           fontSize: 18,
@@ -31,19 +31,17 @@ class StudyMateApp extends StatelessWidget {
 
     final theme = base.copyWith(
       textTheme: interText,
-      // Flutter 2.x: color + brightness + textTheme.headline6 для заголовка AppBar
+      // Flutter 3.x: brightness/textTheme у AppBarTheme удалены.
       appBarTheme: AppBarTheme(
         color: AppColors.surface,
-        brightness: Brightness.light,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
-        textTheme: interText.copyWith(headline6: appBarTitle),
         titleTextStyle: appBarTitle,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          primary: AppColors.neutral900,
-          onPrimary: Colors.white,
+          backgroundColor: AppColors.neutral900,
+          foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

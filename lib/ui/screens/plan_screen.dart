@@ -20,7 +20,7 @@ class _PlanScreenState extends State<PlanScreen> {
   void initState() {
     super.initState();
     StudyStore.instance.addListener(_onStore);
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       final id = PlanService.currentPlanId;
       if (id != null) {
         PlanSessionTracker.instance.startPlanList(id);

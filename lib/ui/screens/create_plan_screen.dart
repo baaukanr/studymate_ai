@@ -25,7 +25,7 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_exam == null && mounted) {
         Navigator.of(context).pushReplacementNamed(StudyMateRoutes.createExam);
       }
