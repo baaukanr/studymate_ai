@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import fs from "fs";
@@ -10,10 +11,15 @@ app.use(cors());
 app.use(express.json({ limit: "5mb" }));
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8787;
+const AI_PROVIDER = (process.env.AI_PROVIDER ?? "openrouter").trim().toLowerCase();
 const OPENROUTER_API_KEY = (process.env.OPENROUTER_API_KEY ?? "").trim();
-const OPENROUTER_MODEL = (process.env.OPENROUTER_MODEL ?? "openai/gpt-4o-mini").trim();
+const OPENROUTER_MODEL = (process.env.OPENROUTER_MODEL ?? "nvidia/llama-3.1-nemotron-70b-instruct").trim();
+const OPENROUTER_API_BASE = (process.env.OPENROUTER_API_BASE ?? "https://openrouter.ai/api/v1").trim();
 const APP_URL = (process.env.APP_URL ?? "").trim();
 const APP_NAME = (process.env.APP_NAME ?? "StudyMate AI").trim();
+const NVIDIA_API_KEY = (process.env.NVIDIA_API_KEY ?? "").trim();
+const NVIDIA_MODEL = (process.env.NVIDIA_MODEL ?? "meta/llama-3.1-70b-instruct").trim();
+const NVIDIA_API_BASE = (process.env.NVIDIA_API_BASE ?? "https://integrate.api.nvidia.com/v1").trim();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.join(__dirname, "data");
@@ -97,6 +103,123 @@ function parseBearerToken(req) {
   const [kind, token] = auth.split(" ");
   if (kind !== "Bearer" || !token) return "";
   return token.trim();
+}
+
+function hasAiProviderKey() {
+  if (AI_PROVIDER === "nvidia") {
+    return NVIDIA_API_KEY.length > 0;
+  }
+  return OPENROUTER_API_KEY.length > 0;
+}
+
+function aiProviderKeyHint() {
+  if (AI_PROVIDER === "nvidia") return "NVIDIA_API_KEY";
+  return "OPENROUTER_API_KEY";
+}
+
+async function openrouterChatCompletion({ messages, temperature = 0.6, responseFormat }) {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+  };
+  if (APP_URL) headers["HTTP-Referer"] = APP_URL;
+  if (APP_NAME) headers["X-Title"] = APP_NAME;
+
+  const body = {
+    model: OPENROUTER_MODEL,
+    messages,
+    temperature,
+  };
+  if (responseFormat) {
+    body.response_format = responseFormat;
+  }
+
+  const r = await fetch(`${OPENROUTER_API_BASE}/chat/completions`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  const text = await r.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = null;
+  }
+
+  if (!r.ok) {
+    const msg =
+      data?.error?.message ??
+      data?.message ??
+      `OpenRouter error ${r.status}: ${text?.slice(0, 200) ?? ""}`;
+    throw new Error(msg);
+  }
+
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("OpenRouter вернул пустой ответ");
+  }
+  return content.trim();
+}
+
+async function nvidiaChatCompletion({ messages, temperature = 0.6 }) {
+  const r = await fetch(`${NVIDIA_API_BASE}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${NVIDIA_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: NVIDIA_MODEL,
+      messages,
+      temperature,
+    }),
+  });
+
+  const text = await r.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = null;
+  }
+
+  if (!r.ok) {
+    const msg =
+      data?.error?.message ??
+      data?.message ??
+      `NVIDIA AI API error ${r.status}: ${text?.slice(0, 200) ?? ""}`;
+    throw new Error(msg);
+  }
+
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("NVIDIA AI API вернул пустой ответ");
+  }
+  return content.trim();
+}
+
+async function aiChatCompletion({ messages, temperature = 0.6, responseFormat }) {
+  if (AI_PROVIDER === "nvidia") {
+    return nvidiaChatCompletion({ messages, temperature });
+  }
+  return openrouterChatCompletion({ messages, temperature, responseFormat });
+}
+
+function tryParseJsonObjectFromText(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Some models may wrap JSON in prose/markdown. Try first JSON object.
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      return null;
+    }
+  }
 }
 
 ensureDataFiles();
@@ -361,7 +484,7 @@ app.post("/plan/generate", async (req, res) => {
     });
   }
 
-  if (!OPENROUTER_API_KEY) {
+  if (!hasAiProviderKey()) {
     const fallbackDays = safeTopics.map((topic, i) => buildFallbackDay(topic, i, safeSubject));
     return res.json({
       plan: {
@@ -392,49 +515,14 @@ app.post("/plan/generate", async (req, res) => {
       `Верни ТОЛЬКО валидный JSON без markdown:\n` +
       jsonExample;
 
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-    };
-    if (APP_URL) headers["HTTP-Referer"] = APP_URL;
-    if (APP_NAME) headers["X-Title"] = APP_NAME;
-
-    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        response_format: { type: "json_object" },
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.4,
-      }),
+    const content = await aiChatCompletion({
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.4,
+      responseFormat: { type: "json_object" },
     });
 
-    const text = await r.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = null;
-    }
-
-    if (!r.ok) {
-      const msg =
-        data?.error?.message ??
-        data?.message ??
-        `OpenRouter error ${r.status}: ${text?.slice(0, 200) ?? ""}`;
-      return res.status(502).json({ error: { message: msg } });
-    }
-
-    const content = data?.choices?.[0]?.message?.content;
-    if (typeof content !== "string" || !content.trim()) {
-      return res.status(502).json({ error: { message: "AI не вернул план" } });
-    }
-
-    let parsedPlan;
-    try {
-      parsedPlan = JSON.parse(content);
-    } catch {
+    const parsedPlan = tryParseJsonObjectFromText(content);
+    if (!parsedPlan || typeof parsedPlan !== "object") {
       return res.status(502).json({ error: { message: "Не удалось разобрать JSON плана" } });
     }
 
@@ -482,9 +570,9 @@ app.post("/chat", async (req, res) => {
 
     const safeHistory = Array.isArray(history) ? history : [];
 
-    if (!OPENROUTER_API_KEY) {
+    if (!hasAiProviderKey()) {
       return res.status(400).json({
-        error: { message: "Missing OPENROUTER_API_KEY in server environment" },
+        error: { message: `Missing ${aiProviderKeyHint()} in server environment` },
       });
     }
 
@@ -505,45 +593,8 @@ app.post("/chat", async (req, res) => {
       { role: "user", content: message.trim() },
     ];
 
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-    };
-    if (APP_URL) headers["HTTP-Referer"] = APP_URL;
-    if (APP_NAME) headers["X-Title"] = APP_NAME;
-
-    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        messages,
-        temperature: 0.6,
-      }),
-    });
-
-    const text = await r.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = null;
-    }
-
-    if (!r.ok) {
-      const msg =
-        data?.error?.message ??
-        data?.message ??
-        `OpenRouter error ${r.status}: ${text?.slice(0, 200) ?? ""}`;
-      return res.status(502).json({ error: { message: msg } });
-    }
-
-    const reply = data?.choices?.[0]?.message?.content;
-    if (typeof reply !== "string" || !reply.trim()) {
-      return res.status(502).json({ error: { message: "Empty AI reply" } });
-    }
-
-    return res.json({ reply: reply.trim() });
+    const reply = await aiChatCompletion({ messages, temperature: 0.6 });
+    return res.json({ reply });
   } catch (e) {
     return res.status(500).json({
       error: { message: e?.message ? String(e.message) : "Server error" },

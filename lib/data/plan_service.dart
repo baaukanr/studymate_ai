@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/api_base.dart';
@@ -265,36 +266,53 @@ class PlanService {
 
   static Future<String?> generatePlan(PlanRequest request) async {
     lastPlanWasLocalFallback = false;
+    final apiBase = resolveApiBaseUrl();
     try {
-      final r = await http
-          .post(
-            Uri.parse('${resolveApiBaseUrl()}/plan/generate'),
-            headers: const {'Content-Type': 'application/json'},
-            body: jsonEncode(request.toJson()),
-          )
-          .timeout(const Duration(seconds: 45));
-      final body = _parseMap(r.body);
-      if (r.statusCode < 200 || r.statusCode >= 300) {
-        final err = body['error'];
-        if (err is Map && err['message'] is String) {
-          return err['message'] as String;
-        }
-        return 'Не удалось сгенерировать план (код ${r.statusCode})';
-      }
-      final planJson = body['plan'];
-      if (planJson is! Map<String, dynamic>) {
-        return 'Сервер вернул некорректный план';
-      }
-      currentPlan = StudyPlan.fromJson(planJson);
-      if (currentPlan!.days.isEmpty) {
-        return 'План пустой, попробуйте снова';
-      }
+      final err = await _requestPlan(request, apiBase);
+      if (err != null) return err;
       return null;
-    } catch (_) {
+    } catch (error) {
+      if (kIsWeb && apiBase.contains('localhost')) {
+        try {
+          final altUrl = apiBase.replaceFirst('localhost', '127.0.0.1');
+          final err = await _requestPlan(request, altUrl);
+          if (err == null) return null;
+          return err;
+        } catch (_) {
+          // Ignore retry failure and fall back locally.
+        }
+      }
       currentPlan = _localFallbackPlan(request);
       lastPlanWasLocalFallback = true;
       return null;
     }
+  }
+
+  static Future<String?> _requestPlan(PlanRequest request, String apiBase) async {
+    final r = await http
+        .post(
+          Uri.parse('$apiBase/plan/generate'),
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode(request.toJson()),
+        )
+        .timeout(const Duration(seconds: 45));
+    final body = _parseMap(r.body);
+    if (r.statusCode < 200 || r.statusCode >= 300) {
+      final err = body['error'];
+      if (err is Map && err['message'] is String) {
+        return err['message'] as String;
+      }
+      return 'Не удалось сгенерировать план (код ${r.statusCode})';
+    }
+    final planJson = body['plan'];
+    if (planJson is! Map<String, dynamic>) {
+      return 'Сервер вернул некорректный план';
+    }
+    currentPlan = StudyPlan.fromJson(planJson);
+    if (currentPlan!.days.isEmpty) {
+      return 'План пустой, попробуйте снова';
+    }
+    return null;
   }
 
   static Map<String, dynamic> _parseMap(String body) {

@@ -12,7 +12,7 @@
   Раздел E. Android Studio, Android SDK, эмулятор, ANDROID_HOME
   Раздел F. Node.js для backend
   Раздел G. Получение кода и структура папок
-  Раздел H. Запуск сервера (proxy, auth, OpenRouter)
+  Раздел H. Запуск сервера (proxy, auth, OpenRouter / NVIDIA AI API)
   Раздел I. Запуск Flutter-приложения (веб и Android)
   Раздел J. Типичный порядок действий каждый день
   Раздел K. Решение частых проблем
@@ -26,13 +26,14 @@
   • Flutter-клиент (мобильное приложение и/или веб в Chrome).
   • Папка «server» — локальный Node.js backend:
       - авторизация и хранение учебных данных в JSON-файлах (папка server/data/);
-      - прокси к OpenRouter для ИИ (чат и генерация плана).
+      - прокси к OpenRouter (по умолчанию) или NVIDIA AI API для ИИ (чат и генерация плана).
   • Клиент по умолчанию обращается к API:
       - веб-режим:            http://localhost:8787
       - Android-эмулятор:     http://10.0.2.2:8787 (это «localhost компьютера» с точки зрения эмулятора)
   • Папка server/data/ в репозиторий НЕ коммитится (там пользователи и сессии).
 
-  Важно: пока не запущен «server» с корректным OPENROUTER_API_KEY, генерация плана
+  Важно: пока не запущен «server» с корректным OPENROUTER_API_KEY (или NVIDIA_API_KEY),
+  генерация плана
   может уйти в локальный запасной вариант (в приложении показывается оранжевая плашка).
 
 
@@ -253,14 +254,15 @@
       pubspec.yaml         — зависимости Flutter
       android\, ios\, web\ — платформенные проекты Flutter
 
-  Ключ API OpenRouter
+  Ключ API для AI провайдера
   -------------------
-  Зарегистрируйтесь на https://openrouter.ai, создайте API key.
+  По умолчанию используется OpenRouter (https://openrouter.ai), можно выбрать модель NVIDIA через OpenRouter.
+  Для прямого NVIDIA API: https://build.nvidia.com.
   Ключ НЕ вставляйте в публичный репозиторий; храните локально или в переменных среды.
 
 
 ================================================================================
-  Раздел H. Запуск сервера (proxy, auth, OpenRouter)
+  Раздел H. Запуск сервера (proxy, auth, OpenRouter / NVIDIA AI API)
 ================================================================================
 
   Откройте терминал.
@@ -273,16 +275,33 @@
 
        npm install
 
+  2.1 Рекомендуемо: используйте файл .env (чтобы не вводить ключ каждый раз):
+
+      - Скопируйте server\.env.example в server\.env
+      - Откройте server\.env и укажите:
+          AI_PROVIDER=openrouter
+          OPENROUTER_API_KEY=sk-or-v1-...
+          OPENROUTER_MODEL=nvidia/llama-3.1-nemotron-70b-instruct
+      - После этого достаточно обычного npm start
+
   3. Перед КАЖДЫМ запуском в этой же сессии PowerShell задайте ключ и модель
      (пример для PowerShell):
 
+       $env:AI_PROVIDER      = "openrouter"
        $env:OPENROUTER_API_KEY = "sk-or-v1-ВАШ_КЛЮЧ_СЮДА"
-       $env:OPENROUTER_MODEL   = "openai/gpt-4o-mini"
+       $env:OPENROUTER_MODEL   = "nvidia/llama-3.1-nemotron-70b-instruct"
+
+     Для прямого NVIDIA API:
+
+       $env:AI_PROVIDER    = "nvidia"
+       $env:NVIDIA_API_KEY = "nvapi-ВАШ_КЛЮЧ_СЮДА"
+       $env:NVIDIA_MODEL   = "meta/llama-3.1-70b-instruct"
 
      Для CMD (одноразово в окне cmd):
 
+       set AI_PROVIDER=openrouter
        set OPENROUTER_API_KEY=sk-or-v1-ВАШ_КЛЮЧ
-       set OPENROUTER_MODEL=openai/gpt-4o-mini
+       set OPENROUTER_MODEL=nvidia/llama-3.1-nemotron-70b-instruct
 
   4. Запуск:
 
@@ -294,8 +313,9 @@
   Постоянные переменные среды Windows (опционально)
   -------------------------------------------------
   sysdm.cpl → Переменные среды → создать пользовательские:
+    AI_PROVIDER        = openrouter
     OPENROUTER_API_KEY = ваш_ключ
-    OPENROUTER_MODEL   = openai/gpt-4o-mini
+    OPENROUTER_MODEL   = nvidia/llama-3.1-nemotron-70b-instruct
   После этого новые терминалы будут видеть ключ без ручного set.
 
   Проверка, что сервер жив (опционально)
@@ -369,7 +389,7 @@
   1. Запустить Android-эмулятор (если нужен Android), дождаться загрузки.
   2. Терминал 1:
        cd ...\studymate_ai\server
-       (при необходимости задать OPENROUTER_API_KEY)
+      (при необходимости задать OPENROUTER_API_KEY или NVIDIA_API_KEY)
        npm start
   3. Терминал 2:
        cd ...\studymate_ai
@@ -377,6 +397,8 @@
        flutter run -d chrome  ИЛИ  flutter run -d emulator-...
   4. Регистрация / вход в приложении — через ваш локальный backend.
   5. Данные пользователей и планов для разработки лежат в server\data\ локально.
+  6. Для нового устройства используйте requirements.txt в корне проекта как чеклист
+     версий Flutter/Node и основных зависимостей.
 
 
 ================================================================================

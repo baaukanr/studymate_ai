@@ -72,96 +72,121 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final isLast = _page == _slides.length - 1;
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _skipToTabs,
-                  child: const Text(
-                    'Пропустить',
-                    style: TextStyle(color: AppColors.neutral900),
+      backgroundColor: AppColors.background,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 900;
+          return SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: isWide ? 1000 : double.infinity),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const SizedBox(width: 1),
+                          TextButton(
+                            onPressed: _skipToTabs,
+                            child: const Text('Пропустить'),
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: PageView.builder(
+                          controller: _controller,
+                          itemCount: _slides.length,
+                          onPageChanged: (p) => setState(() => _page = p),
+                          itemBuilder: (context, i) {
+                            final s = _slides[i];
+                            return Column(
+                              children: [
+                                const SizedBox(height: 16),
+                                Container(
+                                  height: 280,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    gradient: AppGradients.card,
+                                    borderRadius: BorderRadius.circular(28),
+                                    border: Border.all(color: AppColors.borderSubtle),
+                                    boxShadow: AppShadows.card,
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(18),
+                                        decoration: BoxDecoration(
+                                          gradient: AppGradients.hero,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: const Icon(Icons.auto_awesome, size: 50, color: AppColors.white),
+                                      ),
+                                      const SizedBox(height: 22),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                                        child: Text(
+                                          s.title,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.neutral900,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 14),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                                        child: Text(
+                                          s.description,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            height: 1.5,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          _slides.length,
+                          (i) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
+                            height: 10,
+                            width: i == _page ? 26 : 10,
+                            decoration: BoxDecoration(
+                              color: i == _page ? AppColors.primary : AppColors.neutral200,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      PrimaryButton(
+                        label: isLast ? 'Начать' : 'Далее',
+                        onPressed: _next,
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Expanded(
-                child: PageView.builder(
-                  controller: _controller,
-                  itemCount: _slides.length,
-                  onPageChanged: (p) => setState(() => _page = p),
-                  itemBuilder: (context, i) {
-                    final s = _slides[i];
-                    return Column(
-                      children: [
-                        const SizedBox(height: 16),
-                        Container(
-                          height: 260,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.neutral200),
-                            boxShadow: AppShadows.card,
-                          ),
-                          child: const Center(
-                            child: Icon(Icons.auto_awesome, size: 56),
-                          ),
-                        ),
-                        const SizedBox(height: 28),
-                        Text(
-                          s.title,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.neutral900,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          s.description,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            height: 1.4,
-                            color: AppColors.neutral500,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _slides.length,
-                  (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    height: 8,
-                    width: i == _page ? 20 : 8,
-                    decoration: BoxDecoration(
-                      color: i == _page
-                          ? AppColors.neutral900
-                          : AppColors.neutral200,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              PrimaryButton(
-                label: isLast ? 'Начать' : 'Далее',
-                onPressed: _next,
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

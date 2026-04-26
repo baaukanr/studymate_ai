@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'study_store.dart';
 
@@ -28,7 +29,7 @@ class PlanSessionTracker extends ChangeNotifier {
     _topic = null;
     _started = DateTime.now();
     _startTick();
-    notifyListeners();
+    _safeNotify();
   }
 
   void startTopic(String planId, String topic) {
@@ -37,7 +38,7 @@ class PlanSessionTracker extends ChangeNotifier {
     _topic = topic;
     _started = DateTime.now();
     _startTick();
-    notifyListeners();
+    _safeNotify();
   }
 
   void stop() {
@@ -45,19 +46,33 @@ class PlanSessionTracker extends ChangeNotifier {
     _planId = null;
     _topic = null;
     _started = null;
-    notifyListeners();
+    _safeNotify();
   }
 
   void _startTick() {
     _tick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_planId == null || _started == null) return;
       StudyStore.instance.addEngagementTick(_planId!, topic: _topic);
-      notifyListeners();
+      _safeNotify();
     });
   }
 
   void _stopTick() {
     _tick?.cancel();
     _tick = null;
+  }
+
+  void _safeNotify() {
+    if (!hasListeners) return;
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    final canNotifyNow =
+        phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks;
+    if (canNotifyNow) {
+      notifyListeners();
+      return;
+    }
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (hasListeners) notifyListeners();
+    });
   }
 }

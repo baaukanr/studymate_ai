@@ -48,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: AppColors.neutral900, width: 1.2),
       ),
-      hintStyle: const TextStyle(color: AppColors.neutral500),
+      hintStyle: const TextStyle(color: AppColors.textSecondary),
     );
   }
 
@@ -87,87 +87,188 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.white,
-        elevation: 0,
-        foregroundColor: AppColors.neutral900,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.background,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 900;
+          return Stack(
             children: [
+              Container(decoration: const BoxDecoration(gradient: AppGradients.authBackground)),
+              Positioned(
+                top: -100,
+                right: -70,
+                child: Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.16),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: isWide ? 1100 : double.infinity),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                      child: isWide
+                          ? Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(32),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      borderRadius: BorderRadius.circular(32),
+                                      boxShadow: AppShadows.card,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.school, color: AppColors.primary, size: 36),
+                                        SizedBox(height: 18),
+                                        Text(
+                                          'Создайте профиль за пару шагов',
+                                          style: TextStyle(
+                                            fontSize: 34,
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.neutral900,
+                                            height: 1.1,
+                                          ),
+                                        ),
+                                        SizedBox(height: 16),
+                                        Text(
+                                          'Сохраните прогресс, получайте готовые планы и настраивайте расписание под себя.',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.textSecondary,
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 32),
+                                Expanded(child: _buildForm()),
+                              ],
+                            )
+                          : _buildForm(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildForm() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back),
+                color: AppColors.neutral900,
+              ),
+              const SizedBox(width: 8),
               const Text(
-                'Регистрация',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                ),
+                'Назад',
+                style: TextStyle(color: AppColors.neutral900, fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Создайте аккаунт',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-              ),
-              const SizedBox(height: 28),
-              LabeledField(
-                label: 'Имя',
-                child: TextField(
-                  controller: _firstName,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: _fieldDeco('Иван'),
-                ),
-              ),
-              const SizedBox(height: 20),
-              LabeledField(
-                label: 'Фамилия',
-                child: TextField(
-                  controller: _lastName,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: _fieldDeco('Иванов'),
-                ),
-              ),
-              const SizedBox(height: 20),
-              LabeledField(
-                label: 'Email',
-                child: TextField(
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: _fieldDeco('student@example.com'),
-                ),
-              ),
-              const SizedBox(height: 20),
-              LabeledField(
-                label: 'Пароль',
-                child: TextField(
-                  controller: _password,
-                  obscureText: true,
-                  decoration: _fieldDeco('Не менее 6 символов'),
-                ),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 14),
-                Text(
-                  _error!,
-                  style: const TextStyle(color: AppColors.red600, fontWeight: FontWeight.w600),
-                ),
-              ],
-              const SizedBox(height: 32),
-              PrimaryButton(
-                label: _loading ? 'Регистрация…' : 'Создать аккаунт',
-                onPressed: _loading ? null : _submit,
-              ),
-              const SizedBox(height: 24),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          const Text(
+            'Регистрация',
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              color: AppColors.neutral900,
+              letterSpacing: -0.8,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Создайте профиль и начните готовиться с умным планом',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 30),
+          Container(
+            decoration: BoxDecoration(
+              gradient: AppGradients.card,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: AppShadows.card,
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LabeledField(
+                  label: 'Имя',
+                  child: TextField(
+                    controller: _firstName,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: _fieldDeco('Иван'),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                LabeledField(
+                  label: 'Фамилия',
+                  child: TextField(
+                    controller: _lastName,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: _fieldDeco('Иванов'),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                LabeledField(
+                  label: 'Email',
+                  child: TextField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: _fieldDeco('student@example.com'),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                LabeledField(
+                  label: 'Пароль',
+                  child: TextField(
+                    controller: _password,
+                    obscureText: true,
+                    decoration: _fieldDeco('Не менее 6 символов'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 18),
+            Text(
+              _error!,
+              style: const TextStyle(color: AppColors.red600, fontWeight: FontWeight.w600),
+            ),
+          ],
+          const SizedBox(height: 26),
+          PrimaryButton(
+            label: _loading ? 'Регистрация…' : 'Создать аккаунт',
+            onPressed: _loading ? null : _submit,
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }

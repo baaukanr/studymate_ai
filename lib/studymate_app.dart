@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,69 +11,66 @@ class StudyMateApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final base = ThemeData(
+    final fallbackTextTheme = ThemeData.light().textTheme;
+    final textTheme = kIsWeb
+        ? fallbackTextTheme
+        : GoogleFonts.interTextTheme(fallbackTextTheme);
+
+    final theme = ThemeData(
+      useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColors.surface,
+      scaffoldBackgroundColor: AppColors.background,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       dividerColor: AppColors.borderSubtle,
-    );
-
-    final interText = GoogleFonts.interTextTheme(base.textTheme);
-    final appBarTitle = interText.titleLarge?.copyWith(
-          color: Colors.black,
-          fontWeight: FontWeight.w800,
-          fontSize: 18,
-        ) ??
-        const TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.w800,
-          fontSize: 18,
-        );
-
-    final theme = base.copyWith(
-      textTheme: interText,
-      // Flutter 3.x: brightness/textTheme у AppBarTheme удалены.
-      appBarTheme: AppBarTheme(
-        color: AppColors.surface,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        titleTextStyle: appBarTitle,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.primary,
+        brightness: Brightness.light,
+        primary: AppColors.primary,
+        secondary: AppColors.accent,
+        background: AppColors.background,
+        surface: AppColors.surface,
+        error: AppColors.red600,
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.neutral900,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        ),
-      ),
+      textTheme: textTheme,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.white,
-        hintStyle: const TextStyle(color: AppColors.neutral500),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        hintStyle: const TextStyle(color: AppColors.neutral200),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.neutral900, width: 1.2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: AppColors.primary.withOpacity(0.8), width: 1.4),
+        ),
+      ),
+      appBarTheme: AppBarTheme(
+        color: AppColors.background,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.neutral900),
+        titleTextStyle: const TextStyle(
+          color: AppColors.neutral900,
+          fontWeight: FontWeight.w800,
+          fontSize: 18,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.neutral900,
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       cardTheme: CardTheme(
-        color: AppColors.white,
+        color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.borderSubtle),
+          borderRadius: BorderRadius.circular(24),
         ),
         margin: EdgeInsets.zero,
       ),

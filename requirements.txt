@@ -1,0 +1,21 @@
+# StudyMate AI compatibility manifest (not for pip install).
+# Use this file as a version checklist on a new device.
+
+# Toolchain
+flutter==3.16.0
+dart==3.2.0
+nodejs==20.18.0
+npm==10.8.2
+
+# Flutter app dependencies (from pubspec.yaml)
+firebase_core==2.27.0
+cloud_firestore==4.15.8
+http==1.2.0
+google_fonts==5.1.0
+shared_preferences==2.0.6
+cupertino_icons==1.0.2
+
+# Node backend dependencies (from server/package.json)
+express==4.19.2
+cors==2.8.5
+dotenv==16.6.1

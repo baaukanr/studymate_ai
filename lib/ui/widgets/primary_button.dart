@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme.dart';
+
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -19,17 +21,38 @@ class PrimaryButton extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ElevatedButton(
-          onPressed: onPressed,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 18),
-                const SizedBox(width: 10),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: AppGradients.button,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: AppShadows.cardSoft,
+          ),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+            ),
+            onPressed: onPressed,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 18, color: AppColors.white),
+                  const SizedBox(width: 10),
+                ],
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.white,
+                  ),
+                ),
               ],
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-            ],
+            ),
           ),
         ),
         if (helperText != null) ...[
@@ -38,7 +61,7 @@ class PrimaryButton extends StatelessWidget {
             helperText!,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.black.withOpacity(0.55),
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),

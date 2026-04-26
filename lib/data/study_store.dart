@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'plan_service.dart';
@@ -22,6 +23,23 @@ class StudyStore extends ChangeNotifier {
 
   Timer? _persistDebounce;
   bool _muteRemotePush = false;
+
+  @override
+  void notifyListeners() {
+    if (!hasListeners) return;
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    final canNotifyNow =
+        phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks;
+    if (canNotifyNow) {
+      super.notifyListeners();
+      return;
+    }
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (hasListeners) {
+        super.notifyListeners();
+      }
+    });
+  }
 
   static DateTime? parseUserDate(String raw) {
     final s = raw.trim();

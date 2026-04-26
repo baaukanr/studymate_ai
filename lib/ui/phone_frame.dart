@@ -11,6 +11,27 @@ class PhoneFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final size = media.size;
+    final isDesktop = size.width >= 900;
+
+    if (isDesktop) {
+      return Container(
+        color: AppColors.background,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: AppShadows.cardSoft,
+              ),
+              child: child,
+            ),
+          ),
+        ),
+      );
+    }
 
     const phoneW = 390.0;
     const phoneH = 844.0;

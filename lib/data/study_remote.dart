@@ -2,10 +2,16 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../config/app_features.dart';
 import '../config/api_base.dart';
 import 'auth_service.dart';
+import 'study_remote_firestore.dart';
 
 Future<void> pushStudySnapshot(Map<String, dynamic> payload) async {
+  if (kUseFirebase) {
+    await pushStudySnapshotFirestore(payload);
+    return;
+  }
   final token = await AuthService.getToken();
   if (token == null || token.isEmpty) return;
   try {
@@ -23,6 +29,9 @@ Future<void> pushStudySnapshot(Map<String, dynamic> payload) async {
 }
 
 Future<Map<String, dynamic>?> fetchStudySnapshot() async {
+  if (kUseFirebase) {
+    return fetchStudySnapshotFirestore();
+  }
   final token = await AuthService.getToken();
   if (token == null || token.isEmpty) return null;
   try {

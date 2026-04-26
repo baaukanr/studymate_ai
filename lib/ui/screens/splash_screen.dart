@@ -6,7 +6,6 @@ import '../../data/auth_service.dart';
 import '../../data/study_remote.dart';
 import '../../data/study_store.dart';
 import '../routes.dart';
-import '../theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -44,32 +43,53 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.neutral900,
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.auto_awesome, size: 56, color: Colors.white),
-              SizedBox(height: 14),
-              Text(
-                'StudyMate AI',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 28,
-                ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF4F46E5), Color(0xFF22D3EE)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.8, end: 1.0),
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutBack,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: child,
+                );
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.auto_awesome, size: 68, color: Colors.white),
+                  SizedBox(height: 16),
+                  Text(
+                    'StudyMate AI',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 32,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Твой умный помощник в подготовке к экзамену',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFFEBF4FF),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 6),
-              Text(
-                'Твой умный помощник',
-                style: TextStyle(
-                  color: Color(0xFFBDBDBD),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

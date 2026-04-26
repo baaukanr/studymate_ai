@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import '../../config/api_base.dart';
 import '../theme.dart';
 
-/// Чат через proxy `/chat` (OpenRouter на сервере). Ключ в приложении не нужен.
+/// Чат через proxy `/chat` (NVIDIA AI API на сервере). Ключ в приложении не нужен.
 class AiChatScreen extends StatefulWidget {
   const AiChatScreen({Key? key}) : super(key: key);
 
@@ -72,7 +72,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
           )
           .timeout(const Duration(seconds: 30));
     } catch (_) {
-      return 'Не удалось связаться с сервером. Запустите proxy (cd server → npm start) и задайте OPENROUTER_API_KEY.';
+      return 'Не удалось связаться с сервером. Запустите proxy (cd server → npm start) и задайте OPENROUTER_API_KEY (или NVIDIA_API_KEY при AI_PROVIDER=nvidia).';
     }
 
     if (res.statusCode < 200 || res.statusCode >= 300) {

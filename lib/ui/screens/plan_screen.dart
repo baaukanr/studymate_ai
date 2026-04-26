@@ -173,7 +173,7 @@ class _PlanScreenState extends State<PlanScreen> {
                         '(или запрос оборвался). Показан запасной план по вашим темам.\n\n'
                         'Что сделать:\n'
                         '• Запустите backend: папка server → npm install → npm start (порт 8787).\n'
-                        '• Задайте ключ OpenRouter: set OPENROUTER_API_KEY=sk-or-v1-... (Windows) перед npm start.\n'
+                        '• Задайте AI ключ: set OPENROUTER_API_KEY=sk-or-v1-... (или NVIDIA_API_KEY при AI_PROVIDER=nvidia) перед npm start.\n'
                         '• С телефона/эмулятора localhost не виден — укажите IP вашего ПК в настройках или --dart-define.',
                         style: TextStyle(
                           color: Color(0xFF9A3412),
