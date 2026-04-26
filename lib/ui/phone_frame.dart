@@ -9,63 +9,45 @@ class PhoneFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final size = media.size;
-    final isDesktop = size.width >= 900;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isPhone = width < 600;
+        final isTablet = width >= 600 && width < 1024;
 
-    if (isDesktop) {
-      return Container(
-        color: AppColors.background,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Container(
-              clipBehavior: Clip.hardEdge,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: AppShadows.cardSoft,
+        if (isPhone) {
+          return Container(
+            color: AppColors.neutral50,
+            child: child,
+          );
+        }
+
+        final shellPadding = isTablet ? 16.0 : 28.0;
+        final maxContentWidth = isTablet ? 820.0 : 1280.0;
+        final borderRadius = isTablet ? 24.0 : 32.0;
+
+        return Container(
+          color: AppColors.background,
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.all(shellPadding),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    child: Container(
+                      color: AppColors.neutral50,
+                      child: child,
+                    ),
+                  ),
+                ),
               ),
-              child: child,
             ),
           ),
-        ),
-      );
-    }
-
-    const phoneW = 390.0;
-    const phoneH = 844.0;
-
-    final scale = (size.width / phoneW).clamp(0.0, 1.0);
-    final scaledH = phoneH * scale;
-    final needsScroll = scaledH > size.height;
-
-    final phone = Container(
-      width: phoneW,
-      height: phoneH,
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B0B0B),
-        borderRadius: BorderRadius.circular(44),
-      ),
-      padding: const EdgeInsets.all(10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(36),
-        child: Container(
-          color: AppColors.neutral50,
-          child: child,
-        ),
-      ),
+        );
+      },
     );
-
-    final framed = Center(
-      child: Transform.scale(
-        scale: scale,
-        child: phone,
-      ),
-    );
-
-    if (!needsScroll) return framed;
-    return SingleChildScrollView(child: SizedBox(height: scaledH, child: framed));
   }
 }
 
